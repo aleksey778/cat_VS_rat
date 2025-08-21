@@ -6,11 +6,20 @@
 
 void drawing_map(char **map, int rows, int cols)
 {
+    //границы
     for (int y = 0; y < rows; y++)
         for (int x = 0; x < cols; x++) {
+            mvaddch(y, x, '%');
+            map[y][x] = '%';
+        }
+    
+    //cтены
+    for (int y = 1; y < rows-1; y++)
+        for (int x = 1; x < cols-1; x++) {
             mvaddch(y, x, '#');
             map[y][x] = '#';
         }
+    //пустые места
     for (int y = 5; y < rows-10; y++)
         for (int x = 5; x < cols-10; x++) {
             mvaddch(y, x, ' ');
@@ -41,10 +50,14 @@ const int *my_key_input, char my_role)
         (*px)--;
     else if (*my_key_input == KEY_RIGHT)
         (*px)++;
-    if (map[*py][*px] == '#' && my_role != 'r') { //крыса может проедать стены
+    
+    
+    //если шаг на стену/границу - возвращение персонажа на исходную позицию
+    if (map[*py][*px] == '%' || (my_role == 'c' && map[*py][*px] == '#')) {
         *px = *last_x;
-        *py = *last_y;
-    }
+        *py = *last_y;    
+    } //только крыса может проедать стены(но не границы)
+    
     
     mvaddch(*last_y, *last_x, ' '); //clear last position
     map[*last_y][*last_x] = ' ';
