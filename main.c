@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <ncurses.h>
 
 
@@ -12,6 +13,16 @@ void drawing_map(char **map, int rows, int cols)
         }
     for (int y = 5; y < rows-10; y++)
         for (int x = 5; x < cols-10; x++) {
+            mvaddch(y, x, ' ');
+            map[y][x] = ' ';
+        }
+}
+
+
+void clear_map(char **map, int rows, int cols)
+{
+    for (int y = 0; y < rows; y++)
+        for (int x = 0; x < cols; x++) {
             mvaddch(y, x, ' ');
             map[y][x] = ' ';
         }
@@ -62,15 +73,18 @@ int main()
     keypad(stdscr, 1);
     noecho();
     curs_set(0);
+    //seed
+    srand(time(NULL));
+    
     
     //переменные моего персонажа
     int c = 0;
-    int px = 11, py = 11;
-    int last_x = px, last_y = py;
+    int px, py;
+    int last_x, last_y;
     char my_role; //c - cat, r - rat
     //переменные противника
-    int ex = 12, ey = 12;
-    int last_x_enemy = ex, last_y_enemy = ey;
+    int ex, ey;
+    int last_x_enemy, last_y_enemy;
     char enemy_role; //c - cat, r - rat
     
     
@@ -100,12 +114,32 @@ int main()
     
     //прорисовка карты
     drawing_map(map, rows, cols);
-        
+    
+    
+    //рандомное место появления (спавн)
+    do {
+        px = rand() % cols;
+        py = rand() % rows;
+    } while (map[py][px] != ' ');
+    do {
+        ex = rand() % cols;
+        ey = rand() % rows;
+    } while (map[ey][ex] != ' ');
+    
     
     //Главный цикл
     do {
         move_me(map, &last_x, &last_y, &px, &py, &c, my_role);
         move_enemy(map, &last_x_enemy, &last_y_enemy, &ex, &ey, enemy_role);
+        
+        //столкновение
+        if (px == ex && py == ey) {
+            const char *end_text = (my_role == 'c') ? "win" : "lose";
+            clear_map(map, rows, cols);
+            mvprintw(rows/2, cols/2, "You %s\n", end_text);
+            getch();
+            break;
+        }
         
     } while ((c = getch()) && c != 'q' && c != 27); //27 - ESC
     
