@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+#include <math.h>
 #include <ncurses.h>
 
 
@@ -75,24 +76,45 @@ int px, int py, char enemy_role)
 {
     *last_x = *ex, *last_y = *ey;
     
+    
     // для кота
     if (enemy_role == 'c') {
-        int r = rand() % 2; //[0; 1]
-        //примечение: если равны по х, то не трогать х, если ==у, то у
-        //X преследование
-        if ((r || *ey == py) && *ex != px) {
-            if ((*ex <= px) && (map[*ey][(*ex)+1] != '%' && map[*ey][(*ex)+1] != '#'))
-                (*ex)++;
-            else if ((*ex >= px) && (map[*ey][(*ex)-1] != '%' && map[*ey][(*ex)-1] != '#'))
-                (*ex)--;
-        }
-        //Y преследование
-        else {
-            if ((*ey <= py) && (map[(*ey)+1][*ex] != '%' && map[(*ey)+1][*ex] != '#'))
-                (*ey)++;
-            else if ((*ey >= py) && (map[(*ey)-1][*ex] != '%' && map[(*ey)-1][*ex] != '#'))
-                (*ey)--;
-        }
+        bool up_not_board = (map[(*ey)-1][*ex] != '%' && map[(*ey)-1][*ex] != '#') ? true : false;
+        bool down_not_board = (map[(*ey)+1][*ex] != '%' && map[(*ey)+1][*ex] != '#') ? true : false;
+        bool left_not_board = (map[*ey][(*ex)-1] != '%' && map[*ey][(*ex)-1] != '#') ? true : false;
+        bool right_not_board = (map[*ey][(*ex)+1] != '%' && map[*ey][(*ex)+1] != '#') ? true : false;
+        
+        double up_distance_to_rat = hypot(px-(*ex), py-((*ey)-1));
+        double down_distance_to_rat = hypot(px-(*ex), py-((*ey)+1));
+        double left_distance_to_rat = hypot(px-((*ex)-1), py-(*ey));
+        double right_distance_to_rat = hypot(px-((*ex)+1), py-(*ey));
+        
+        
+        
+        //вверх
+        if ((up_not_board == true) &&
+        (up_distance_to_rat <= down_distance_to_rat) &&
+        (up_distance_to_rat <= left_distance_to_rat) &&
+        (up_distance_to_rat <= right_distance_to_rat))
+            (*ey)--;
+        //вниз
+        else if ((down_not_board == true) &&
+        (down_distance_to_rat <= up_distance_to_rat) &&
+        (down_distance_to_rat <= left_distance_to_rat) &&
+        (down_distance_to_rat <= right_distance_to_rat))
+            (*ey)++;
+        //влево
+        else if ((left_not_board == true) &&
+        (left_distance_to_rat <= up_distance_to_rat) &&
+        (left_distance_to_rat <= down_distance_to_rat) &&
+        (left_distance_to_rat <= right_distance_to_rat))
+            (*ex)--;
+        //вправо
+        else if ((right_not_board == true) &&
+        (right_distance_to_rat <= up_distance_to_rat) &&
+        (right_distance_to_rat <= down_distance_to_rat) &&
+        (right_distance_to_rat <= left_distance_to_rat))
+            (*ex)++;
     }
     //для крысы
     else if (enemy_role == 'r') {
