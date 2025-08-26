@@ -9,14 +9,14 @@
 void drawing_map(char **map, int rows, int cols)
 {
     //границы
-    for (int y = 0; y < rows; y++)
+    for (int y = 0; y < rows-1; y++)
         for (int x = 0; x < cols; x++) {
             mvaddch(y, x, '%');
             map[y][x] = '%';
         }
     
     //cтены
-    for (int y = 1; y < rows-1; y++)
+    for (int y = 1; y < rows-2; y++)
         for (int x = 1; x < cols-1; x++) {
             mvaddch(y, x, '#');
             map[y][x] = '#';
@@ -175,6 +175,14 @@ int rows, int cols, char my_role)
 }
 
 
+void print_output_panel(int lvl, int max_lvl, int balls, int balls_to_next_lvl,
+int rows, int cols)
+{
+    mvprintw(rows-1, 1, "lvl: %d/%d                         %d/%d",
+     lvl, max_lvl, balls, balls_to_next_lvl);
+
+}
+
 int main()
 {
     //init
@@ -239,7 +247,7 @@ int main()
     
     //Главный цикл
     do {
-        
+        print_output_panel(1, 1, 0, 10, rows, cols);
         move_me(map, &last_x, &last_y, &px, &py, &c, my_role);
         if (fight_if_collision(map, px, py, ex, ey, rows, cols, my_role) == true)
             break;
