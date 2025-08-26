@@ -89,31 +89,48 @@ int px, int py, char enemy_role)
         double left_distance_to_rat = hypot(px-((*ex)-1), py-(*ey));
         double right_distance_to_rat = hypot(px-((*ex)+1), py-(*ey));
         
-        
+        //усл. вверх
+        bool up_less_down = (down_not_board == true) ?
+         (up_distance_to_rat <= down_distance_to_rat) : true;
+        bool up_less_left = (left_not_board == true) ?
+         (up_distance_to_rat <= left_distance_to_rat) : true;
+        bool up_less_right = (right_not_board == true) ?
+         (up_distance_to_rat <= right_distance_to_rat) : true;
+        //усл. вниз
+        bool down_less_up = (up_not_board == true) ?
+         (down_distance_to_rat <= up_distance_to_rat) : true;
+        bool down_less_left = (left_not_board == true) ?
+         (down_distance_to_rat <= left_distance_to_rat) : true;
+        bool down_less_right = (right_not_board == true) ?
+         (down_distance_to_rat <= right_distance_to_rat) : true;
+        //усл. влево
+        bool left_less_up = (up_not_board == true) ?
+         (left_distance_to_rat <= up_distance_to_rat) : true;
+        bool left_less_down = (down_not_board == true) ?
+         (left_distance_to_rat <= down_distance_to_rat) : true;
+        bool left_less_right = (right_not_board == true) ?
+         (left_distance_to_rat <= right_distance_to_rat) : true;
+        //усл.вправо
+        bool right_less_up = (up_not_board == true) ?
+         (right_distance_to_rat <= up_distance_to_rat) : true;
+        bool right_less_down = (down_not_board == true) ?
+         (right_distance_to_rat <= down_distance_to_rat) : true;
+        bool right_less_left = (right_not_board == true) ?
+         (right_distance_to_rat <= left_distance_to_rat) : true;
+     
+     
         
         //вверх
-        if ((up_not_board == true) &&
-        (up_distance_to_rat <= down_distance_to_rat) &&
-        (up_distance_to_rat <= left_distance_to_rat) &&
-        (up_distance_to_rat <= right_distance_to_rat))
+        if ((up_not_board == true) && (up_less_down && up_less_left && up_less_right))
             (*ey)--;
         //вниз
-        else if ((down_not_board == true) &&
-        (down_distance_to_rat <= up_distance_to_rat) &&
-        (down_distance_to_rat <= left_distance_to_rat) &&
-        (down_distance_to_rat <= right_distance_to_rat))
+        else if ((down_not_board == true) && (down_less_up && down_less_left && down_less_right))
             (*ey)++;
         //влево
-        else if ((left_not_board == true) &&
-        (left_distance_to_rat <= up_distance_to_rat) &&
-        (left_distance_to_rat <= down_distance_to_rat) &&
-        (left_distance_to_rat <= right_distance_to_rat))
+        else if ((left_not_board == true) && (left_less_up && left_less_down && left_less_right))
             (*ex)--;
         //вправо
-        else if ((right_not_board == true) &&
-        (right_distance_to_rat <= up_distance_to_rat) &&
-        (right_distance_to_rat <= down_distance_to_rat) &&
-        (right_distance_to_rat <= left_distance_to_rat))
+        else if ((right_not_board == true) && (right_less_up && right_less_down && right_less_left))
             (*ex)++;
     }
     //для крысы
