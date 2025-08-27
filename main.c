@@ -6,30 +6,36 @@
 #include <ncurses.h>
 
 
+void print_map(char **map, int rows, int cols)
+{
+    for (int y = 0; y < rows-1; y++)
+        for (int x = 0; x < cols; x++)
+            mvaddch(y, x, map[y][x]);
+}
+
+
 void drawing_map(char **map, int rows, int cols)
 {
     //границы
     for (int y = 0; y < rows-1; y++)
-        for (int x = 0; x < cols; x++) {
-            mvaddch(y, x, '%');
+        for (int x = 0; x < cols; x++)
             map[y][x] = '%';
-        }
+      
     
     //cтены
     for (int y = 1; y < rows-2; y++)
-        for (int x = 1; x < cols-1; x++) {
-            mvaddch(y, x, '#');
+        for (int x = 1; x < cols-1; x++)
             map[y][x] = '#';
-        }
+            
+        
     //пустые места
     int  r_x = (rand() % (cols / 3)) + 1; //[1; (cols / 3)]
     int r_y = (rand() % (rows / 3)) + 1; //[1; (rows / 3)]
     
     for (int y = r_y; y < rows-r_y; y++)
-        for (int x = r_x; x < cols-r_x; x++) {
-            mvaddch(y, x, ' ');
+        for (int x = r_x; x < cols-r_x; x++)
             map[y][x] = ' ';
-        }
+        
 }
 
 
@@ -193,7 +199,6 @@ void spawn_cheese(char **map, int number, int rows, int cols)
             r_y = (rand() % (rows - 1)) + 1; //[1; (rows - 1)]
         } while (map[r_y][r_x] != ' ');
         
-        mvaddch(r_y, r_x, '*');
         map[r_y][r_x] = '*';
     }
 
@@ -256,6 +261,7 @@ int main()
     //прорисовка карты
     drawing_map(map, rows, cols);
     spawn_cheese(map, balls_to_next_lvl, rows, cols);
+    print_map(map, rows, cols);
     
     //рандомное место появления (спавн)
     do {
