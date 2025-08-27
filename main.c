@@ -183,6 +183,24 @@ int rows, int cols)
 
 }
 
+
+void spawn_cheese(char **map, int number, int rows, int cols)
+{
+    int r_x, r_y;
+    for (int i = 0; i < number; i++) {
+        do {
+            r_x = (rand() % (cols - 1)) + 1; //[1; (cols - 1)]
+            r_y = (rand() % (rows - 1)) + 1; //[1; (rows - 1)]
+        } while (map[r_y][r_x] != ' ');
+        
+        mvaddch(r_y, r_x, '*');
+        map[r_y][r_x] = '*';
+    }
+
+}
+
+
+
 int main()
 {
     //init
@@ -204,6 +222,11 @@ int main()
     int ex, ey;
     int last_x_enemy, last_y_enemy;
     char enemy_role; //c - cat, r - rat
+    //cтатистика
+    int my_lvl = 1;
+    int max_lvl = 10;
+    int my_balls = 0;
+    int balls_to_next_lvl = 5;
     
     
     //масштаб карты
@@ -232,7 +255,7 @@ int main()
     
     //прорисовка карты
     drawing_map(map, rows, cols);
-    
+    spawn_cheese(map, balls_to_next_lvl, rows, cols);
     
     //рандомное место появления (спавн)
     do {
@@ -247,7 +270,7 @@ int main()
     
     //Главный цикл
     do {
-        print_output_panel(1, 1, 0, 10, rows, cols);
+        print_output_panel(my_lvl, max_lvl, my_balls, balls_to_next_lvl, rows, cols);
         move_me(map, &last_x, &last_y, &px, &py, &c, my_role);
         if (fight_if_collision(map, px, py, ex, ey, rows, cols, my_role) == true)
             break;
