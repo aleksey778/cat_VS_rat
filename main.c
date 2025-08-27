@@ -49,7 +49,7 @@ void clear_map(char **map, int rows, int cols)
 
 
 void move_me(char **map, int *last_x, int *last_y, int *px, int *py,
-const int *my_key_input, char my_role)
+const int *my_key_input, char my_role, int *my_cheese)
 {
     *last_x = *px, *last_y = *py;
     if (*my_key_input == KEY_UP)
@@ -68,6 +68,9 @@ const int *my_key_input, char my_role)
         *py = *last_y;    
     } //только крыса может проедать стены(но не границы)
     
+    //съесть сыр
+    if (map[*py][*px] == '*')
+        (*my_cheese)++;
     
     mvaddch(*last_y, *last_x, ' '); //clear last position
     map[*last_y][*last_x] = ' ';
@@ -290,8 +293,7 @@ int main()
         mvaddch(y_lvl_point, x_lvl_point, '>');
         
         //передвинуть меня
-        print_output_panel(my_lvl, max_lvl, my_balls, balls_to_next_lvl, rows, cols);
-        move_me(map, &last_x, &last_y, &px, &py, &c, my_role);
+        move_me(map, &last_x, &last_y, &px, &py, &c, my_role, &my_balls);
         if (fight_if_collision(map, px, py, ex, ey, rows, cols, my_role) == true)
             break;
         
@@ -300,6 +302,9 @@ int main()
         px, py, enemy_role);
         if (fight_if_collision(map, px, py, ex, ey, rows, cols, my_role) == true)
             break;
+            
+        //вывод статистики
+        print_output_panel(my_lvl, max_lvl, my_balls, balls_to_next_lvl, rows, cols);
         
     } while ((c = getch()) && c != 'q' && c != 27); //27 - ESC
     
