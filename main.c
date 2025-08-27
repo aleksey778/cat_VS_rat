@@ -35,7 +35,6 @@ void drawing_map(char **map, int rows, int cols)
     for (int y = r_y; y < rows-r_y; y++)
         for (int x = r_x; x < cols-r_x; x++)
             map[y][x] = ' ';
-        
 }
 
 
@@ -85,10 +84,10 @@ int px, int py, char enemy_role)
     
     // для кота
     if (enemy_role == 'c') {
-        bool up_not_board = (map[(*ey)-1][*ex] != '%' && map[(*ey)-1][*ex] != '#') ? true : false;
-        bool down_not_board = (map[(*ey)+1][*ex] != '%' && map[(*ey)+1][*ex] != '#') ? true : false;
-        bool left_not_board = (map[*ey][(*ex)-1] != '%' && map[*ey][(*ex)-1] != '#') ? true : false;
-        bool right_not_board = (map[*ey][(*ex)+1] != '%' && map[*ey][(*ex)+1] != '#') ? true : false;
+        bool up_not_board = (map[(*ey)-1][*ex] == ' ' || map[(*ey)-1][*ex] == 'r') ? true : false;
+        bool down_not_board = (map[(*ey)+1][*ex] == ' ' || map[(*ey)+1][*ex] == 'r') ? true : false;
+        bool left_not_board = (map[*ey][(*ex)-1] == ' ' || map[*ey][(*ex)-1] == 'r') ? true : false;
+        bool right_not_board = (map[*ey][(*ex)+1] == ' ' || map[*ey][(*ex)+1] == 'r') ? true : false;
         
         double up_distance_to_rat = hypot(px-(*ex), py-((*ey)-1));
         double down_distance_to_rat = hypot(px-(*ex), py-((*ey)+1));
@@ -190,19 +189,25 @@ int rows, int cols)
 }
 
 
+void get_random_xy_in_void_place(char **map, int rows, int cols, int *x, int *y)
+{
+    do {
+            *x = (rand() % (cols - 1)) + 1; //[1; (cols - 1)]
+            *y = (rand() % (rows - 1)) + 1; //[1; (rows - 1)]
+    } while (map[*y][*x] != ' ');
+}
+
+
 void spawn_cheese(char **map, int number, int rows, int cols)
 {
     int r_x, r_y;
     for (int i = 0; i < number; i++) {
-        do {
-            r_x = (rand() % (cols - 1)) + 1; //[1; (cols - 1)]
-            r_y = (rand() % (rows - 1)) + 1; //[1; (rows - 1)]
-        } while (map[r_y][r_x] != ' ');
-        
+        get_random_xy_in_void_place(map, rows, cols, &r_x, &r_y);
         map[r_y][r_x] = '*';
     }
 
 }
+
 
 
 
@@ -274,13 +279,23 @@ int main()
     } while (map[ey][ex] != ' ');
     
     
+    //точка "следующий уровень" - >
+    int x_lvl_point, y_lvl_point;
+    get_random_xy_in_void_place(map, rows, cols, &x_lvl_point, &y_lvl_point);
+    
+    
     //Главный цикл
     do {
+        //прорисовка точки "следующий уровень" - >
+        mvaddch(y_lvl_point, x_lvl_point, '>');
+        
+        //передвинуть меня
         print_output_panel(my_lvl, max_lvl, my_balls, balls_to_next_lvl, rows, cols);
         move_me(map, &last_x, &last_y, &px, &py, &c, my_role);
         if (fight_if_collision(map, px, py, ex, ey, rows, cols, my_role) == true)
             break;
         
+        //передвинуть противника
         move_enemy(map, &last_x_enemy, &last_y_enemy, &ex, &ey,
         px, py, enemy_role);
         if (fight_if_collision(map, px, py, ex, ey, rows, cols, my_role) == true)
