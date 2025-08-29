@@ -259,13 +259,14 @@ int main()
     //переменные моего персонажа
     int c = 0;
     struct player my_player;
-    //противник
-    struct player enemy_n1;
     //cтатистика
     int my_lvl = 1;
     int max_lvl = 10;
     int my_balls = 0;
     int balls_to_next_lvl = 5;
+    //противники
+    int enemy_number = 1;
+    struct player enemy_list[enemy_number];
     
     
     //масштаб карты
@@ -290,7 +291,10 @@ int main()
     mvprintw(rows/2, cols/2, "Press key\n'1' - cat\n'2' - rat\n");
     c = getch();
     my_player.role = ((c == '1') ? 'c' : 'r');
-    enemy_n1.role = ((c == '1') ? 'r' : 'c');
+    //назначение роли противникам(которая противоположна роли игрока)
+    char enemy_role = ((c == '1') ? 'r' : 'c');
+    for (int i = 0; i < enemy_number; i++)
+        enemy_list[i].role = enemy_role;
     
     
     //прорисовка карты
@@ -303,10 +307,12 @@ int main()
         my_player.x = rand() % cols;
         my_player.y = rand() % rows;
     } while (map[my_player.y][my_player.x] != ' ');
-    do {
-        enemy_n1.x = rand() % cols;
-        enemy_n1.y = rand() % rows;
-    } while (map[enemy_n1.y][enemy_n1.x] != ' ');
+    for (int i = 0; i < enemy_number; i++) {
+        do {
+            enemy_list[i].x = rand() % cols;
+            enemy_list[i].y = rand() % rows;
+        } while (map[enemy_list[i].y][enemy_list[i].x] != ' ');
+    }
     
     
     
@@ -321,17 +327,27 @@ int main()
         mvaddch(y_lvl_point, x_lvl_point, '>');
         
         //передвинуть меня
+        bool out_cycle1 = false;
         move_me(map, &my_player, &c, &my_balls);
-        if (fight_if_collision(map, my_player.x, my_player.y, enemy_n1.x, enemy_n1.y,
-        rows, cols, enemy_n1.role) == true)
-            break;
-        
-        //передвинуть противника
-        move_enemy(map, &enemy_n1, my_player.x, my_player.y);
-        if (fight_if_collision(map, my_player.x, my_player.y, enemy_n1.x, enemy_n1.y,
-        rows, cols, enemy_n1.role) == true)
+        for (int i = 0; i < enemy_number; i++) {
+            if ((out_cycle1 = fight_if_collision(map, my_player.x, my_player.y, enemy_list[i].x, enemy_list[i].y,
+            rows, cols, enemy_list[i].role)) == true)
+                break;
+        }
+        if (out_cycle1 == true)
             break;
             
+        
+        //передвинуть противников
+        bool out_cycle2 = false;
+        for (int i = 0; i < enemy_number; i++) {
+            move_enemy(map, &enemy_list[i], my_player.x, my_player.y);
+            if ((out_cycle2 = fight_if_collision(map, my_player.x, my_player.y, enemy_list[i].x, enemy_list[i].y,
+            rows, cols, enemy_list[i].role)) == true)
+                break;
+        }
+        if (out_cycle2 == true)
+            break;
             
         //вывод статистики
         print_output_panel(my_lvl, max_lvl, my_balls, balls_to_next_lvl, rows, cols);
