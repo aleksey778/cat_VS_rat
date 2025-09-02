@@ -46,7 +46,7 @@ void drawing_map(char **map, int rows, int cols)
 }
 
 
-void clear_map(char **map, int rows, int cols)
+void clear_display(char **map, int rows, int cols)
 {
     for (int y = 0; y < rows; y++)
         for (int x = 0; x < cols; x++) {
@@ -204,7 +204,7 @@ int rows, int cols, char my_role)
     bool collision = (px == ex) && (py == ey);
     if (collision) {
         const char *end_text = (my_role == 'c') ? "win" : "lose";
-        clear_map(map, rows, cols);
+        clear_display(map, rows, cols);
         mvprintw(rows/2, cols/2, "You %s\n", end_text);
         getch();
     }
@@ -224,9 +224,10 @@ int rows, int cols)
 
 void get_random_xy_in_void_place(char **map, int rows, int cols, int *x, int *y)
 {
+    int count = 0;
     do {
-            *x = (rand() % (cols - 1)) + 1; //[1; (cols - 1)]
-            *y = (rand() % (rows - 1)) + 1; //[1; (rows - 1)]
+            *x = (rand() % (cols - 2)) + 1; //[1; (cols - 2)]
+            *y = (rand() % (rows - 2)) + 1; //[1; (rows - 2)]
     } while (map[*y][*x] != ' ');
 }
 
@@ -239,6 +240,40 @@ void spawn_cheese(char **map, int number, int rows, int cols)
         map[r_y][r_x] = '*';
     }
 
+}
+
+
+void release_map(char **map, int rows, int cols, struct player *my_player,
+struct player *enemy_list, int enemy_number, int balls_to_next_lvl)
+{
+    char enemy_role = ((my_player->role == '1') ? 'r' : 'c');
+    for (int i = 0; i < enemy_number; i++)
+        enemy_list[i].role = enemy_role;
+    
+    //карта
+    clear_display(map, rows, cols);
+    drawing_map(map, rows, cols);
+    spawn_cheese(map, balls_to_next_lvl, rows, cols);
+    print_map(map, rows, cols);
+    
+    //спавн    
+    do {
+    
+         my_player->x = (rand() % (cols / 3)) + 1; //[1; (cols / 3)]
+         my_player->y = (rand() % (rows / 3)) + 1; //[1; (rows / 3)]
+         //my_player->x = rand() % cols;
+         //my_player->y = rand() % rows;
+    } while (map[my_player->y][my_player->x] != ' ');
+    
+    
+    for (int i = 0; i < enemy_number; i++) {
+        do {
+            enemy_list[i].x = (rand() % (cols / 3)) + 1; //[1; (cols / 3)]
+            enemy_list[i].y = (rand() % (rows / 3)) + 1; //[1; (rows / 3)]
+            //enemy_list[0].x = rand() % cols;
+            //enemy_list[0].y = rand() % rows;
+        } while (map[enemy_list[i].y][enemy_list[i].x] != ' ');
+    }
 }
 
 
@@ -266,7 +301,7 @@ int main()
     int balls_to_next_lvl = 5;
     //противники
     int enemy_number = 1;
-    struct player enemy_list[enemy_number];
+    struct player enemy_list[10];//!!
     
     
     //масштаб карты
@@ -289,30 +324,20 @@ int main()
     
     //выбор персонажа: кот или крыса
     mvprintw(rows/2, cols/2, "Press key\n'1' - cat\n'2' - rat\n");
+    
     c = getch();
-    my_player.role = ((c == '1') ? 'c' : 'r');
+    
+    my_player.role = ((c == '1') ? 'c' : 'r');///*
+    
     //назначение роли противникам(которая противоположна роли игрока)
-    char enemy_role = ((c == '1') ? 'r' : 'c');
+    char enemy_role = ((my_player.role == '1') ? 'r' : 'c');
     for (int i = 0; i < enemy_number; i++)
         enemy_list[i].role = enemy_role;
     
     
-    //прорисовка карты
-    drawing_map(map, rows, cols);
-    spawn_cheese(map, balls_to_next_lvl, rows, cols);
-    print_map(map, rows, cols);
-    
-    //рандомное место появления (спавн)
-    do {
-        my_player.x = rand() % cols;
-        my_player.y = rand() % rows;
-    } while (map[my_player.y][my_player.x] != ' ');
-    for (int i = 0; i < enemy_number; i++) {
-        do {
-            enemy_list[i].x = rand() % cols;
-            enemy_list[i].y = rand() % rows;
-        } while (map[enemy_list[i].y][enemy_list[i].x] != ' ');
-    }
+    //создание карты
+    release_map(map, rows, cols, &my_player,
+            enemy_list, enemy_number, balls_to_next_lvl);
     
     
     
@@ -321,29 +346,47 @@ int main()
     get_random_xy_in_void_place(map, rows, cols, &x_lvl_point, &y_lvl_point);
     
     
+    
+    
+    
+    
     //Главный цикл
     do {
+        //переход на следующий уровень
+        if (
+         my_player.x == x_lvl_point && my_player.y == y_lvl_point
+         && my_balls == balls_to_next_lvl) {
+            my_lvl++;
+            enemy_number++;
+            my_balls = 0;
+            release_map(map, rows, cols, &my_player,
+            enemy_list, enemy_number, balls_to_next_lvl);
+            get_random_xy_in_void_place(map, rows, cols, &x_lvl_point, &y_lvl_point);            
+         }
+         
         //прорисовка точки "следующий уровень" - >
         mvaddch(y_lvl_point, x_lvl_point, '>');
+        
         
         //передвинуть меня
         bool out_cycle1 = false;
         move_me(map, &my_player, &c, &my_balls);
         for (int i = 0; i < enemy_number; i++) {
             if ((out_cycle1 = fight_if_collision(map, my_player.x, my_player.y, enemy_list[i].x, enemy_list[i].y,
-            rows, cols, enemy_list[i].role)) == true)
+            rows, cols, my_player.role)) == true)
                 break;
         }
         if (out_cycle1 == true)
             break;
-            
+        
+         
         
         //передвинуть противников
         bool out_cycle2 = false;
         for (int i = 0; i < enemy_number; i++) {
             move_enemy(map, &enemy_list[i], my_player.x, my_player.y);
             if ((out_cycle2 = fight_if_collision(map, my_player.x, my_player.y, enemy_list[i].x, enemy_list[i].y,
-            rows, cols, enemy_list[i].role)) == true)
+            rows, cols, my_player.role)) == true)
                 break;
         }
         if (out_cycle2 == true)
@@ -351,6 +394,8 @@ int main()
             
         //вывод статистики
         print_output_panel(my_lvl, max_lvl, my_balls, balls_to_next_lvl, rows, cols);
+        
+        
         
     } while ((c = getch()) && c != 'q' && c != 27); //27 - ESC
     
